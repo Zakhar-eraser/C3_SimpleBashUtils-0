@@ -25,5 +25,8 @@
 
 void interpret_symbol(char *out_str, char symb);
 void passthrough(char *out_str, char c);
+void printer(FILE *file,
+    void (*sign_interpreter)(char *, char),
+    void (*line_counter)(size_t *, char, char));
 //void replace(char *str, char req, char rep);
 #endif  // _SRC_CAT_S21_CAT_H_

@@ -2,9 +2,11 @@
 
 int main(int argc, char **argv) {
     int out = 1;
-
+    void (*interpreter)(char *, char) = passthrough;
     if (argc > 1) {
-        if (argv[1])
+        if (argv[1][0] == '-') {
+            char *option = argv[1][1];
+        }
     }
 }
 
@@ -14,7 +16,7 @@ void interpret_symbol(char *out_str, char symb) {
         strcpy(out_str, strcat("^", cs));
     } else if (symb == 127) {
         strcpy(out_str, "^?");
-    } else if (symb > 127) {
+    } else if (symb > 127 && symb < 160) {
         char str[3];
         char cs[2] = {symb - 64, 0};
         interpret_symbol(str, cs);
