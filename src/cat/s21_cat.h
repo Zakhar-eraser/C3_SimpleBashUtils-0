@@ -23,10 +23,18 @@
 #define SHOW_TABS "t"
 #define SHOW_TABS_GNU "T"
 
-void interpret_symbol(char *out_str, char symb);
+typedef void (*interpreter)(char*, char);
+typedef void(*post_interpreter)(char *, char, size_t *);
+typedef void (*line_counter)(size_t *, char, char);
+
+void interpret_nonprint(char *out_str, char symb);
 void passthrough(char *out_str, char c);
-void printer(FILE *file,
-    void (*sign_interpreter)(char *, char),
-    void (*line_counter)(size_t *, char, char));
+void squeeze_line_counter(size_t *counter, char p_ch, char c_ch);
+void non_blank_line_counter(size_t *counter, char p_ch, char c_ch);
+void any_line_counter(size_t *counter, char p_ch, char c_ch);
+void printer(
+    FILE *file,
+    post_interpreter post_inter,
+    line_counter line_c);
 //void replace(char *str, char req, char rep);
 #endif  // _SRC_CAT_S21_CAT_H_

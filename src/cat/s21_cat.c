@@ -10,6 +10,39 @@ int main(int argc, char **argv) {
     }
 }
 
+void printer(
+    FILE *file,
+    post_interpreter post_inter,
+    line_counter line_c) {
+    unsigned char p_ch;
+    unsigned char out_str[5];
+    size_t lines = 0;
+    while (!feof(file)) {
+        unsigned char c_ch = fgetc(file);
+        post_inter(out_str, c_ch, &lines);
+        printf("%s", out_str);
+    }
+}
+
+void any_line_counter(size_t *counter, char p_ch, char c_ch) {
+    (void)p_ch;
+    (void)c_ch;
+    *counter++;
+}
+
+void non_blank_line_counter(size_t *counter, char p_ch, char c_ch) {
+    (void)p_ch;
+    if (c_ch != '\n' && c_ch != '\0')
+        *counter++;
+}
+
+void squeeze_line_counter(size_t *counter, char p_ch, char c_ch) {
+    if ((c_ch != '\n' && c_ch != '\0') ||
+        (c_ch != '\n' && c_ch != '\0')) {
+            *counter++;
+        }
+}
+
 void interpret_symbol(char *out_str, char symb) {
     if (symb < 32) {
         char cs[2] = {symb + 64, 0};
