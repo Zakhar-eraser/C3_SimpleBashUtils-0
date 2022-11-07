@@ -32,12 +32,15 @@ void passthrough(char *out_str, char c, char twice);
 
 char non_blank_line_counter(size_t *counter, char p_ch, char c_ch);
 char any_line_counter(size_t *counter, char p_ch, char c_ch);
+char end_counter(size_t *counter, char p_ch, char c_ch);
 char no_counter(size_t *counter, char p_ch, char c_ch);
+char tabs_counter(size_t *counter, char p_ch, char c_ch);
 
 void number(char *out, char changed, size_t *count);
 void squeeze_blank(char *out, char changed, size_t *count);
 void mark_lines_end(char *out, char changed, size_t *count);
 void post_passthrough(char *out, char changed, size_t *count);
+void mark_tabs(char *out, char changed, size_t *count);
 
 void printer(
     FILE *file,

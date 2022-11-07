@@ -44,11 +44,11 @@ char select_option(char *option, interpreter *inter,
     } else if (!strcmp(option, SHOW_ENDS)) {
         *inter = interpret_nonprint;
         *post_inter = mark_lines_end;
-        *line_c = any_line_counter;
+        *line_c = end_counter;
     } else if (!strcmp(option, SHOW_ENDS_GNU))  {
         *inter = passthrough;
         *post_inter = mark_lines_end;
-        *line_c = any_line_counter;
+        *line_c = end_counter;
     } else if (!strcmp(option, NUMBER) ||
                !strcmp(option, NUMBER_GNU)) {
         *inter = passthrough;
@@ -59,6 +59,14 @@ char select_option(char *option, interpreter *inter,
         *inter = passthrough;
         *post_inter = squeeze_blank;
         *line_c = non_blank_line_counter;
+    } else if (!strcmp(option, SHOW_TABS)) {
+        *inter = interpret_nonprint;
+        *post_inter = mark_tabs;
+        *line_c = tabs_counter;
+    } else if (!strcmp(option, SHOW_TABS_GNU)) {
+        *inter = passthrough;
+        *post_inter = mark_tabs;
+        *line_c = tabs_counter;
     } else {
         out = 0;
     }
@@ -70,7 +78,7 @@ void printer(
     interpreter inter,
     post_interpreter post_inter,
     line_counter line_c) {
-    char p_ch = '\0';
+    char p_ch = '\n';
     char out_str[100];
     size_t lines = 0;
     char countered = 0;
@@ -89,28 +97,60 @@ void printer(
     }
 }
 
+char tabs_counter(size_t *counter, char p_ch, char c_ch) {
+    (void)counter;
+    (void)p_ch;
+    char changed = 0;
+    if (c_ch == '\t') {
+        changed = 1;
+    }
+    return changed;
+}
+
+char end_counter(size_t *counter, char p_ch, char c_ch) {
+    (void)counter;
+    (void)p_ch;
+    char changed = 0;
+    if (c_ch == '\n') {
+        changed = 1;
+    }
+    return changed;
+}
+
+void mark_tabs(char *out, char changed, size_t *count) {
+    (void)count;
+    if (changed) {
+        sprintf(out, "^I");
+    }
+}
+
 void mark_lines_end(char *out, char changed, size_t *count) {
     (void)count;
-    if (changed || out[0] == '\0') {
+    if (changed) {
         sprintf(out, "$\n");
     }
 }
 
 void number(char *out, char changed, size_t *count) {
-    if (!(*count)) {
-        char tmp[5];
+    if (changed) {
+        char tmp[2];
         strcpy(tmp, out);
-        (*count)++;
-        sprintf(out, "     1  %s", tmp);
-    } else if (changed) {
-        sprintf(out, "\n     %ld  ", *count);
+        sprintf(out, "  %ld     %s", *count, tmp);
     }
 }
 
 void squeeze_blank(char *out, char changed, size_t *count) {
-    (void)count;
-    if (!changed && (out[0] == '\n'))
-        out[0] = '\0';
+    if (changed) {
+        *count = 0;
+    } else {
+        if (out[0] == '\n') {
+            if (*count == 2) {
+                out[0] = '\0';
+            } else {
+                (*count)++;
+            }
+        }
+    }
 }
 
 void post_passthrough(char *out, char changed, size_t *count) {
@@ -120,9 +160,9 @@ void post_passthrough(char *out, char changed, size_t *count) {
 }
 
 char any_line_counter(size_t *counter, char p_ch, char c_ch) {
-    (void)p_ch;
+    (void)c_ch;
     char changed = 0;
-    if (c_ch == '\n') {
+    if (p_ch == '\n') {
         (*counter)++;
         changed = 1;
     }
@@ -131,9 +171,9 @@ char any_line_counter(size_t *counter, char p_ch, char c_ch) {
 
 char non_blank_line_counter(size_t *counter, char p_ch, char c_ch) {
     char changed = 0;
-    if (c_ch == '\n' && p_ch != '\n') {
-        (*counter)++;
+    if ((p_ch == '\n') && (c_ch != '\n')) {
         changed = 1;
+        (*counter)++;
     }
     return changed;
 }
@@ -146,9 +186,9 @@ char no_counter(size_t *counter, char p_ch, char c_ch) {
 }
 
 void interpret_nonprint(char *out_str, char symb, char twice) {
-    if (twice && (symb == '\t')) {
+    if (!twice && (symb == '\t')) {
         strcpy(out_str, "\t");
-    } else if (twice && (symb == '\n')) {
+    } else if (!twice && (symb == '\n')) {
         strcpy(out_str, "\n");
     } else if ((symb >= 0) && (symb < 32)) {
         sprintf(out_str, "^%c", (symb + 64));
