@@ -28,48 +28,49 @@ int main(int argc, char **argv) {
     return out;
 }
 
-int find_matches(
+int find_matches_in_file(
         match_modifiers *mods,
         FILE *file,
         char *filename,
         pcre *re) {
     char *line = NULL;
     size_t line_cap = 0, line_len = 0;
-    int opts = 0;
     while ((line_len = getline(line, line_cap, file)) > 0) {
-        if ()
+        while((find_match_in_line(re, )))
     }
 }
 
 int find_match_in_line(
+        match_modifiers *mods
         pcre *re,
-        char *subj,
-        size_t subj_len,
-        int offset,
-        int *opts,
-        int print) {
-    int out = 1;
-    size_t OVECCOUNT = 300;
+        char *str,
+        size_t str_len) {
+    int out = 0;
+    const size_t OVECCOUNT = 300;
     int ovector[OVECCOUNT];
-    int rc = pcre_exec(
-        re, NULL,
-        subj, subj_len,
-        offset, *opts,
-        ovector, OVECCOUNT);
-    if (rc == PCRE_ERROR_NOMATCH) {
-        if (*opts == 0)
-            out = 0;
+    ovector[0] = 0;
+    ovector[1] = 1;
+    int repeat = 1;
+    do {
+        int opts = 0;
         if (ovector[0] == ovector[1]) {
-            if (ovector[0] == subj_len) {
-                out = 0;
+            if (ovector[0] == str_len) {
+                repeat = 0;
             } else {
-                *opts = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
-                out = 2;
+                opts = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
             }
-        } else {
-            *opts = 0;
         }
-    }
+        int rc = pcre_exec(
+            re, NULL,
+            str, str_len,
+            0, opts,
+            ovector, OVECCOUNT);
+        if ((rc == PCRE_ERROR_NOMATCH) && (opts == 0))
+            repeat = 0;
+        if (rc)
+            out = 1;
+    } while(mods->all_matches && repeat);
+    return out;
 }
 
 void print_matches(char *subject, int *ovector, int rc) {

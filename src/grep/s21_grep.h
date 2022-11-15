@@ -24,16 +24,15 @@ void extend_pattern(char *old, char *add);
 void extend_pattern_from_file(char *old, char *filename);
 
 char *get_pattern(match_modifiers *mods);
-int find_matches(
+int find_matches_in_file(
     match_modifiers *mods,
     FILE *file,
     char *filename,
     pcre *re);
 
 int find_match_in_line(
-    pcre *re, char *subj,
-    size_t subj_len, int offset,
-    int opts, int print);
+    match_modifiers *mods, pcre *re,
+    char *str, size_t str_len);
 
 void print_matches(char *subject, int *ovector, int rc);
 
