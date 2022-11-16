@@ -10,8 +10,6 @@ typedef struct match_modifiers {
     char **argv;
     int pcre_opts;
     int inversion;
-    size_t matches_counter;
-    size_t lines_counter;
     int only_matches_count;
     int print_line_number;
     int first_match;
@@ -20,11 +18,11 @@ typedef struct match_modifiers {
     int all_matches;
 } match_modifiers;
 
-void extend_pattern(char *old, char *add);
-void extend_pattern_from_file(char *old, char *filename);
+char *extend_pattern(char *old, char *add);
+char *extend_pattern_from_file(char *old, char *filename);
 
 char *get_pattern(match_modifiers *mods);
-int find_matches_in_file(
+void find_matches_in_file(
     match_modifiers *mods,
     FILE *file,
     char *filename,
@@ -32,7 +30,7 @@ int find_matches_in_file(
 
 int find_match_in_line(
     match_modifiers *mods, pcre *re,
-    char *str, size_t str_len);
+    char *str, ssize_t str_len);
 
 void print_matches(char *subject, int *ovector, int rc);
 

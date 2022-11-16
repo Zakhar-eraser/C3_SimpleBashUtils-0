@@ -135,7 +135,7 @@ void number(char *out, char changed, size_t *count) {
     if (changed) {
         char tmp[2];
         strcpy(tmp, out);
-        sprintf(out, "  %ld     %s", *count, tmp);
+        sprintf(out, "  %lu     %s", *count, tmp);
     }
 }
 
