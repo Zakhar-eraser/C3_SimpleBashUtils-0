@@ -110,12 +110,14 @@ void print_matches(char *subject, int *ovector, int rc) {
 }
 
 char *get_pattern(match_modifiers *mods) {
-    int opt, cont = 1;
+    int opt, patterned = 0, cont = 1;
     char *options = "e:ivclnhsf:o", *pattern = "";
     while (((opt = getopt(mods->argc, mods->argv, options)) != -1) &&
             cont) {
         if (opt == 'e') {
-            pattern = extend_pattern(pattern, optarg);
+            patterned = 1;
+            if (!(pattern = extend_pattern(pattern, optarg)))
+                cont = 0;
         } else if (opt == 'i') {
             mods->pcre_opts = PCRE_CASELESS;
         } else if (opt == 'v') {
@@ -131,14 +133,19 @@ char *get_pattern(match_modifiers *mods) {
         } else if (opt == 's') {
             mods->hide_warnings = 1;
         } else if (opt == 'f') {
-            pattern = extend_pattern_from_file(pattern, optarg);
+             if (!(pattern = extend_pattern_from_file(pattern, optarg)))
+                cont = 0;
         } else if (opt == 'o') {
             mods->all_matches = 1;
         } else {
+            cont = 0;
             printf("Wrong options\n");
             free(pattern);
             pattern = NULL;
         }
+    }
+    if (!patterned && (optind < argc)) {
+        pattern = extend_pattern(pattern, argv[optind]);
     }
     return pattern;
 }
