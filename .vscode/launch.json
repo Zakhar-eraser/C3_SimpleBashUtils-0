@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Cat Debug",
+            "program": "${workspaceFolder}/src/cat/s21_cat",
+            "args": ["-s", "tests/empty.txt"],
+            "cwd": "${workspaceFolder}/src",
+            "preLaunchTask": "Build debug cat"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Grep Debug",
+            "program": "${workspaceFolder}/src/grep/s21_grep",
+            "args": ["a", "tests/some_text.txt"],
+            "cwd": "${workspaceFolder}/src",
+            "preLaunchTask": "Build debug grep"
+        }
+    ]
+}

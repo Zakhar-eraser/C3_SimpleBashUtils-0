@@ -1,17 +1,17 @@
 #include "s21_grep.h"
 
 int main(int argc, char **argv) {
-    int out = 0, erroroffset;
+    int out = 0, erroroffset, argind;
     const char *error;
     pcre *re;
     match_modifiers mods = {.argc = argc, .argv = argv};
-    char *pattern = get_pattern(&mods);
-    if (pattern && (optind < argc)) {
-        if (argc - optind == 1)
+    char *pattern = get_pattern(&mods, &argind);
+    if (pattern && (argind < argc)) {
+        if (argc - argind == 1)
             mods.hide_filenames = 1;
         if ((re = pcre_compile(pattern, mods.pcre_opts,
             &error, &erroroffset, NULL))) {
-            for (int i = optind; i < argc; i++) {
+            for (int i = argind; i < argc; i++) {
                 FILE *file;
                 if ((file = fopen(argv[i], "r"))) {
                     find_matches_in_file(&mods, file, argv[i], re);
@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
                         printf("No such file: %s\n", argv[i]);
                 }
             }
+        } else {
             out = 2;
             printf("Pattern compilation error at %d: %s\n", erroroffset, error);
         }
@@ -52,6 +53,8 @@ void find_matches_in_file(
                     printf("%s:\n", filename);
                 if (mods->print_line_number)
                     printf("%lu:\n", lines_counter);
+                if (!(mods->all_matches))
+                    printf("%s", line);
             }
         }
         free(line);
@@ -109,15 +112,14 @@ void print_matches(char *subject, int *ovector, int rc) {
     }
 }
 
-char *get_pattern(match_modifiers *mods) {
+char *get_pattern(match_modifiers *mods, int *argind) {
     int opt, patterned = 0, cont = 1;
-    char *options = "e:ivclnhsf:o", *pattern = "";
+    char *options = "e:ivclnhsf:o", *pattern = NULL;
     while (((opt = getopt(mods->argc, mods->argv, options)) != -1) &&
             cont) {
         if (opt == 'e') {
             patterned = 1;
-            if (!(pattern = extend_pattern(pattern, optarg)))
-                cont = 0;
+            pattern = extend_pattern(pattern, optarg);
         } else if (opt == 'i') {
             mods->pcre_opts = PCRE_CASELESS;
         } else if (opt == 'v') {
@@ -133,7 +135,7 @@ char *get_pattern(match_modifiers *mods) {
         } else if (opt == 's') {
             mods->hide_warnings = 1;
         } else if (opt == 'f') {
-             if (!(pattern = extend_pattern_from_file(pattern, optarg)))
+            if (!(pattern = extend_pattern_from_file(pattern, optarg)))
                 cont = 0;
         } else if (opt == 'o') {
             mods->all_matches = 1;
@@ -144,18 +146,25 @@ char *get_pattern(match_modifiers *mods) {
             pattern = NULL;
         }
     }
-    if (!patterned && (optind < argc)) {
-        pattern = extend_pattern(pattern, argv[optind]);
+    *argind = optind;
+    if (!patterned && (optind < mods->argc - 1)) {
+        pattern = extend_pattern(pattern, mods->argv[optind]);
+        (*argind)++;
     }
     return pattern;
 }
 
 char *extend_pattern(char *old, char *add) {
-    char *tmp = (char *)realloc(old, sizeof(char) * (strlen(old) + strlen(add)));
-    if (tmp) {
-        strcat(tmp, add);
+    if (old) {
+        char *tmp = (char *)realloc(old, sizeof(char) * (strlen(old) + strlen(add)));
+        if (tmp) {
+            strcat(tmp, add);
+            old = tmp;
+        }
+    } else {
+        old = add;
     }
-    return tmp;
+    return old;
 }
 
 char *extend_pattern_from_file(char *old, char *filename) {

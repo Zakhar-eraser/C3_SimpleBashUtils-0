@@ -21,7 +21,7 @@ typedef struct match_modifiers {
 char *extend_pattern(char *old, char *add);
 char *extend_pattern_from_file(char *old, char *filename);
 
-char *get_pattern(match_modifiers *mods);
+char *get_pattern(match_modifiers *mods, int *argind);
 void find_matches_in_file(
     match_modifiers *mods,
     FILE *file,
