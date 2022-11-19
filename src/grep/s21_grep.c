@@ -3,7 +3,7 @@
 int main(int argc, char **argv) {
     int out = 0, erroroffset, argind;
     const char *error;
-    pcre *re;
+    pcre *re = NULL;
     match_modifiers mods = {.argc = argc, .argv = argv};
     char *pattern = get_pattern(&mods, &argind);
     if (pattern && (argind < argc)) {
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
                 } else {
                     out = 1;
                     if (!(mods.hide_warnings))
-                        printf("No such file: %s\n", argv[i]);
+                        printf("No such file: %s", argv[i]);
                 }
             }
         } else {
@@ -26,9 +26,11 @@ int main(int argc, char **argv) {
             printf("Pattern compilation error at %d: %s\n", erroroffset, error);
         }
     } else {
+        printf("Usage: s21_grep [options] template [file_name]");
         out = 2;
     }
-    pcre_free(re);
+    if (re)
+        pcre_free(re);
     free(pattern);
     return out;
 }
@@ -48,20 +50,28 @@ void find_matches_in_file(
         int matched = find_match_in_line(mods, re, line, line_len);
         if ((matched && !(mods->inversion)) || (!matched && mods->inversion)) {
             matched_lines_counter++;
-            if (!(mods->only_matches_count)) {
+            if (!(mods->only_matches_count) && !(mods->first_match)) {
                 if (!(mods->hide_filenames))
-                    printf("%s:\n", filename);
+                    printf("%s:", filename);
                 if (mods->print_line_number)
-                    printf("%lu:\n", lines_counter);
-                if (!(mods->all_matches))
+                    printf("%lu:", lines_counter);
+                if (!(mods->all_matches)) {
                     printf("%s", line);
+                    if (line[line_len - 1] != '\n')
+                        printf("\n");
+                }
             }
         }
         free(line);
         line = NULL;
     }
-    if (mods->only_matches_count)
-        printf("%s:%lu\n", filename, matched_lines_counter);
+    if (mods->only_matches_count) {
+        if (!(mods->hide_filenames))
+            printf("%s:", filename);
+        printf("%lu\n", matched_lines_counter);
+    }
+    if (mods->first_match && matched_lines_counter)
+        printf("%s\n", filename);
 }
 
 int find_match_in_line(
@@ -74,7 +84,7 @@ int find_match_in_line(
     int ovector[OVECCOUNT];
     ovector[0] = 0;
     ovector[1] = 1;
-    int repeat = mods->all_matches;
+    int repeat = mods->all_matches && !(mods->first_match);
     do {
         int opts = 0;
         if (ovector[0] == ovector[1]) {
@@ -91,7 +101,7 @@ int find_match_in_line(
             ovector, OVECCOUNT);
         if ((rc == PCRE_ERROR_NOMATCH) && (opts == 0))
             repeat = 0;
-        if (rc) {
+        if (rc > 0) {
             out = 1;
             if (mods->all_matches) {
                 print_matches(str, ovector, rc);
@@ -155,14 +165,10 @@ char *get_pattern(match_modifiers *mods, int *argind) {
 }
 
 char *extend_pattern(char *old, char *add) {
-    if (old) {
-        char *tmp = (char *)realloc(old, sizeof(char) * (strlen(old) + strlen(add)));
-        if (tmp) {
-            strcat(tmp, add);
-            old = tmp;
-        }
-    } else {
-        old = add;
+    char *tmp = (char *)realloc(old, sizeof(char) * (len(old) + len(add)));
+    if (tmp) {
+        strcat(tmp, add);
+        old = tmp;
     }
     return old;
 }
@@ -174,6 +180,8 @@ char *extend_pattern_from_file(char *old, char *filename) {
         char *line = NULL;
         ssize_t line_len = getline(&line, &line_cap, file);
         if (line_len > 0) {
+            if (line[line_len - 1] == '\n')
+                line[line_len - 1] = '\0';
             old = extend_pattern(old, line);
             free(line);
         }
@@ -183,4 +191,11 @@ char *extend_pattern_from_file(char *old, char *filename) {
         old = NULL;
     }
     return old;
+}
+
+size_t len(char *str) {
+    size_t l = 0;
+    if (str)
+        l = strlen(str);
+    return l;
 }

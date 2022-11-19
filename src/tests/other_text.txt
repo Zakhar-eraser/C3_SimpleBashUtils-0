@@ -1,0 +1,6 @@
+The malloc(), calloc(), valloc(), realloc(), and reallocf() functions
+allocate memory.  The allocated memory is aligned such that it can be
+used for any data type, including AltiVec- and SSE-related types.  The
+aligned_alloc() function allocates memory with the requested alignment.
+The free() function frees allocations that were created via the preceding
+allocation functions.

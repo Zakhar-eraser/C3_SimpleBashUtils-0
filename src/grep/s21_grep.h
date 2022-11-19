@@ -32,6 +32,8 @@ int find_match_in_line(
     match_modifiers *mods, pcre *re,
     char *str, ssize_t str_len);
 
+size_t len(char *str);
+
 void print_matches(char *subject, int *ovector, int rc);
 
 #endif  // _SRC_GREP_S21_GREP_H_
