@@ -15,10 +15,11 @@ int main(int argc, char **argv) {
                 FILE *file;
                 if ((file = fopen(argv[i], "r"))) {
                     find_matches_in_file(&mods, file, argv[i], re);
+                    fclose(file);
                 } else {
                     out = 1;
                     if (!(mods.hide_warnings))
-                        printf("No such file: %s", argv[i]);
+                        printf("No such file: %s\n", argv[i]);
                 }
             }
         } else {
@@ -123,12 +124,11 @@ void print_matches(char *subject, int *ovector, int rc) {
 }
 
 char *get_pattern(match_modifiers *mods, int *argind) {
-    int opt, patterned = 0, cont = 1;
+    int opt, cont = 1;
     char *options = "e:ivclnhsf:o", *pattern = NULL;
     while (((opt = getopt(mods->argc, mods->argv, options)) != -1) &&
             cont) {
         if (opt == 'e') {
-            patterned = 1;
             pattern = extend_pattern(pattern, optarg);
         } else if (opt == 'i') {
             mods->pcre_opts = PCRE_CASELESS;
@@ -157,7 +157,7 @@ char *get_pattern(match_modifiers *mods, int *argind) {
         }
     }
     *argind = optind;
-    if (!patterned && (optind < mods->argc - 1)) {
+    if (!len(pattern) && (optind < mods->argc - 1)) {
         pattern = extend_pattern(pattern, mods->argv[optind]);
         (*argind)++;
     }
@@ -165,8 +165,15 @@ char *get_pattern(match_modifiers *mods, int *argind) {
 }
 
 char *extend_pattern(char *old, char *add) {
-    char *tmp = (char *)realloc(old, sizeof(char) * (len(old) + len(add)));
+    size_t pref_len = len(old);
+    char add_sign[2] = {0, 0};
+    if (pref_len) {
+        pref_len++;
+        add_sign[0] = '|';
+    }
+    char *tmp = (char *)realloc(old, sizeof(char) * (pref_len + len(add)));
     if (tmp) {
+        strcat(tmp, add_sign);
         strcat(tmp, add);
         old = tmp;
     }
@@ -178,13 +185,15 @@ char *extend_pattern_from_file(char *old, char *filename) {
     if (file) {
         size_t line_cap = 0;
         char *line = NULL;
-        ssize_t line_len = getline(&line, &line_cap, file);
-        if (line_len > 0) {
+        ssize_t line_len;
+        while ((line_len = getline(&line, &line_cap, file)) > 0) {
             if (line[line_len - 1] == '\n')
                 line[line_len - 1] = '\0';
             old = extend_pattern(old, line);
             free(line);
+            line = NULL;
         }
+        fclose(file);
     } else {
         printf("No such file: %s", filename);
         free(old);

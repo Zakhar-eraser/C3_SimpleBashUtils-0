@@ -1,2 +1,4 @@
-aligned_alloc() function allocates memory with the requested alignment.
-The free() function frees allocations that were created via the preceding
+the
+2:the
+the
+4:
