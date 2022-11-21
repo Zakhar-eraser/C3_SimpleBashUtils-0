@@ -41,22 +41,21 @@ void find_matches_in_file(
         FILE *file,
         char *filename,
         pcre *re) {
-    size_t lines_counter = 0;
     size_t matched_lines_counter = 0;
     char *line = NULL;
     size_t line_cap = 0;
     ssize_t line_len = 0;
     while ((line_len = getline(&line, &line_cap, file)) > 0) {
-        lines_counter++;
+        mods->lines_counter++;
         int matched = find_match_in_line(mods, re, line, line_len);
         if ((matched && !(mods->inversion)) || (!matched && mods->inversion)) {
             matched_lines_counter++;
             if (!(mods->only_matches_count) && !(mods->first_match)) {
                 if (!(mods->hide_filenames))
                     printf("%s:", filename);
-                if (mods->print_line_number)
-                    printf("%lu:", lines_counter);
                 if (!(mods->all_matches)) {
+                    if (mods->print_line_number)
+                        printf("%lu:", mods->lines_counter);
                     printf("%s", line);
                     if (line[line_len - 1] != '\n')
                         printf("\n");
@@ -66,6 +65,7 @@ void find_matches_in_file(
         free(line);
         line = NULL;
     }
+    mods->lines_counter = 0;
     if (mods->only_matches_count) {
         if (!(mods->hide_filenames))
             printf("%s:", filename);
@@ -76,11 +76,9 @@ void find_matches_in_file(
 }
 
 int find_match_in_line(
-        match_modifiers *mods,
-        pcre *re,
-        char *str,
-        ssize_t str_len) {
-    int out = 0;
+        match_modifiers *mods, pcre *re,
+        char *str, ssize_t str_len) {
+    int out = 0, printed = 0;
     const size_t OVECCOUNT = 300;
     int ovector[OVECCOUNT];
     ovector[0] = 0;
@@ -105,6 +103,10 @@ int find_match_in_line(
         if (rc > 0) {
             out = 1;
             if (mods->all_matches) {
+                if (mods->print_line_number && !printed) {
+                    printf("%lu:", mods->lines_counter);
+                    printed = 1;
+                }
                 print_matches(str, ovector, rc);
                 int skip = ovector[rc * 3 - 2];
                 str += skip;

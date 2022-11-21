@@ -16,6 +16,7 @@ typedef struct match_modifiers {
     int hide_filenames;
     int hide_warnings;
     int all_matches;
+    size_t lines_counter;
 } match_modifiers;
 
 char *extend_pattern(char *old, char *add);
