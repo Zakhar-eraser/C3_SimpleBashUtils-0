@@ -1,3 +1,2 @@
-2:the
-4:the
-the
+tests/other_text.txt:tests/other_text.txt:tests/other_text.txt:2
+tests/some_text.txt:tests/some_text.txt:tests/some_text.txt:2

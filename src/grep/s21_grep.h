@@ -31,7 +31,8 @@ void find_matches_in_file(
 
 int find_match_in_line(
     match_modifiers *mods, pcre *re,
-    char *str, ssize_t str_len);
+    char *str, ssize_t str_len,
+    char *filename);
 
 size_t len(char *str);
 

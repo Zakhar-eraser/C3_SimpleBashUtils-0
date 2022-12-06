@@ -11,15 +11,17 @@ int main(int argc, char **argv) {
             mods.hide_filenames = 1;
         if ((re = pcre_compile(pattern, mods.pcre_opts,
             &error, &erroroffset, NULL))) {
-            for (int i = argind; i < argc; i++) {
-                FILE *file;
-                if ((file = fopen(argv[i], "r"))) {
-                    find_matches_in_file(&mods, file, argv[i], re);
-                    fclose(file);
-                } else {
-                    out = 1;
-                    if (!(mods.hide_warnings))
-                        printf("No such file: %s\n", argv[i]);
+            if (!(mods.all_matches && mods.inversion)) {
+                for (int i = argind; i < argc; i++) {
+                    FILE *file;
+                    if ((file = fopen(argv[i], "r"))) {
+                        find_matches_in_file(&mods, file, argv[i], re);
+                        fclose(file);
+                    } else {
+                        out = 1;
+                        if (!(mods.hide_warnings))
+                            printf("No such file: %s\n", argv[i]);
+                    }
                 }
             }
         } else {
@@ -47,11 +49,11 @@ void find_matches_in_file(
     ssize_t line_len = 0;
     while ((line_len = getline(&line, &line_cap, file)) > 0) {
         mods->lines_counter++;
-        int matched = find_match_in_line(mods, re, line, line_len);
+        int matched = find_match_in_line(mods, re, line, line_len, filename);
         if ((matched && !(mods->inversion)) || (!matched && mods->inversion)) {
             matched_lines_counter++;
             if (!(mods->only_matches_count) && !(mods->first_match)) {
-                if (!(mods->hide_filenames))
+                if (!(mods->hide_filenames) && !(mods->all_matches))
                     printf("%s:", filename);
                 if (!(mods->all_matches)) {
                     if (mods->print_line_number)
@@ -77,10 +79,9 @@ void find_matches_in_file(
 
 int find_match_in_line(
         match_modifiers *mods, pcre *re,
-        char *str, ssize_t str_len) {
-    int out = 0, printed = 0;
+        char *str, ssize_t str_len, char *filename) {
     const size_t OVECCOUNT = 300;
-    int ovector[OVECCOUNT];
+    int ovector[OVECCOUNT], out = 0, printed = 0;
     ovector[0] = 0;
     ovector[1] = 1;
     int repeat = mods->all_matches && !(mods->first_match);
@@ -93,21 +94,20 @@ int find_match_in_line(
                 opts = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
             }
         }
-        int rc = pcre_exec(
-            re, NULL,
-            str, str_len,
-            0, opts,
-            ovector, OVECCOUNT);
+        int rc = pcre_exec(re, NULL, str, str_len, 0, opts, ovector, OVECCOUNT);
         if ((rc == PCRE_ERROR_NOMATCH) && (opts == 0))
             repeat = 0;
         if (rc > 0) {
             out = 1;
             if (mods->all_matches) {
-                if (mods->print_line_number && !printed) {
-                    printf("%lu:", mods->lines_counter);
-                    printed = 1;
+                if (!(mods->hide_filenames) && !printed) {
+                    printed = 1 && (mods->first_match || mods->only_matches_count);
+                    printf("%s:", filename);
                 }
-                print_matches(str, ovector, rc);
+                if (mods->print_line_number)
+                    printf("%lu:", mods->lines_counter);
+                if (!mods->only_matches_count && !mods->first_match)
+                    print_matches(str, ovector, rc);
                 int skip = ovector[rc * 3 - 2];
                 str += skip;
                 str_len -= skip;
