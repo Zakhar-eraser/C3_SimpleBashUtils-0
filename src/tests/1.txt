@@ -1,2 +1,3 @@
-tests/other_text.txt:2
-tests/some_text.txt:2
+the
+the
+the

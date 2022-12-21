@@ -16,8 +16,17 @@ typedef struct match_modifiers {
     int hide_filenames;
     int hide_warnings;
     int all_matches;
-    size_t lines_counter;
 } match_modifiers;
+
+typedef struct print_data {
+    char *subject;
+    ssize_t subject_len;
+    size_t lines_counter;
+    size_t matches_counter;
+    int rc;
+    int ovector[300];
+    int repeat;
+} print_data;
 
 char *extend_pattern(char *old, char *add);
 char *extend_pattern_from_file(char *old, char *filename);
@@ -30,12 +39,12 @@ void find_matches_in_file(
     pcre *re);
 
 int find_match_in_line(
-    match_modifiers *mods, pcre *re,
-    char *str, ssize_t str_len,
-    char *filename);
+    pcre *re,
+    print_data *data);
 
 size_t len(char *str);
 
-void print_matches(char *subject, int *ovector, int rc);
+void print_matches(print_data *data);
+void print_matched_line(print_data *data);
 
 #endif  // _SRC_GREP_S21_GREP_H_
