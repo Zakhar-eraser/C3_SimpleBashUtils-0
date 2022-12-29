@@ -1,0 +1,9 @@
+Ignore case distinctions in patterns and input data,
+
+
+
+so that characters that differ only in case match each other.
+Although this is straightforward when letters differ in case only via
+
+lowercase-uppercase pairs, the behavior is unspecified in other
+

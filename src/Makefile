@@ -11,6 +11,9 @@ s21_cat:
 s21_cat_debug:
 	gcc $(CFLAGS) -g -o cat/s21_cat cat/s21_cat.c
 
+s21_cat_test: s21_cat
+	./tests/s21_cat_test.sh
+
 s21_grep:
 	gcc $(CFLAGS) -o grep/s21_grep grep/s21_grep.c -lpcre
 
