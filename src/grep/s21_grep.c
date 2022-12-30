@@ -60,6 +60,7 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
     free(data.line);
     data.line = NULL;
   }
+  free(data.line);
   print_score(mods, &data);
 }
 
@@ -179,6 +180,7 @@ char *extend_pattern_from_file(char *old, char *filename) {
       free(line);
       line = NULL;
     }
+    free(line);
     fclose(file);
   } else {
     printf("No such file: %s", filename);

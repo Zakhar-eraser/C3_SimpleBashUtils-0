@@ -9,7 +9,7 @@ s21_cat:
 	gcc $(CFLAGS) -o cat/s21_cat cat/s21_cat.c
 
 s21_cat_debug:
-	gcc $(CFLAGS) -g -o cat/s21_cat cat/s21_cat.c
+	gcc -g -o cat/s21_cat cat/s21_cat.c
 
 s21_cat_test: s21_cat
 	./tests/s21_cat_test.sh
@@ -21,8 +21,9 @@ s21_grep_test: s21_grep
 	./tests/s21_grep_test.sh
 
 s21_grep_debug:
-	gcc $(CFLAGS) -g -o grep/s21_grep grep/s21_grep.c -lpcre
+	gcc -g -o grep/s21_grep grep/s21_grep.c -lpcre
 
-clean: rm cat/s21_cat grep/s21_grep
+clean:
+	rm cat/s21_cat grep/s21_grep
 
 rebuild: clean s21_cat s21_grep
