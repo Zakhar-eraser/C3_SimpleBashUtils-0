@@ -3,7 +3,7 @@
 test() {
     echo "START TEST with args: $1"
     grep $1 > tests/1.txt
-    grep/s21_grep $1 > tests/2.txt
+    ./s21_grep $1 > tests/2.txt
     diff tests/1.txt tests/2.txt && echo SUCCESS
 }
 

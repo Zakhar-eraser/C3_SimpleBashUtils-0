@@ -3,7 +3,7 @@
 test_leaks() {
     echo "START TEST with args: $1"
     echo $1 >> tests/leaks_output.txt
-    leaks -atExit -- ./cat/s21_cat $1 >> tests/leaks_output.txt
+    leaks -atExit -- ./s21_cat $1 >> tests/leaks_output.txt
 }
 
 echo 'TESTING s21_cat FOR LEAKS'

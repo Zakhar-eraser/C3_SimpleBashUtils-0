@@ -3,7 +3,7 @@
 test_leaks() {
     echo "START TEST with args: $1"
     echo $1 >> tests/leaks_output.txt
-    leaks -atExit -exclude len -- ./grep/s21_grep $1 >> tests/leaks_output.txt
+    leaks -atExit -- ./s21_grep $1 >> tests/leaks_output.txt
 }
 
 echo 'TESTING s21_grep FOR LEAKS'
