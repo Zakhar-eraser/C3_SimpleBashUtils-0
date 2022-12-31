@@ -13,7 +13,7 @@ s21_grep_test: s21_grep
 s21_grep_debug:
 	gcc -g -o s21_grep s21_grep.c -lpcre
 
-s21_grep_leaks: s21_grep
+s21_grep_leaks: s21_grep_debug
 	./tests/s21_grep_leaks_test.sh
 
 clean:

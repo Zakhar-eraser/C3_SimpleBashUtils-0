@@ -13,7 +13,7 @@ s21_cat_debug:
 s21_cat_test: s21_cat
 	./tests/s21_cat_test.sh
 
-s21_cat_leaks: s21_cat
+s21_cat_leaks: s21_cat_debug
 	./tests/s21_cat_leaks_test.sh
 
 clean:

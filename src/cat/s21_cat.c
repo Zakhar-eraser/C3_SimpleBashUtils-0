@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
       FILE *file = fopen(argv[path_str_num], "r");
       if (file) {
         printer(file, inter, post_inter, line_c);
+        fclose(file);
       } else {
         out = 1;
       }
@@ -73,7 +74,7 @@ char select_option(char *option, interpreter *inter,
 void printer(FILE *file, interpreter inter, post_interpreter post_inter,
              line_counter line_c) {
   char p_ch = '\n';
-  char out_str[100];
+  char out_str[100] = "\0";
   size_t lines = 0;
   char countered = 0;
   while (1) {
