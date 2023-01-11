@@ -6,19 +6,18 @@ int main(int argc, char **argv) {
   pcre *re = NULL;
   match_modifiers mods = {.argc = argc, .argv = argv};
   char *pattern = get_pattern(&mods, &argind);
+  if (mods.all_matches && mods.inversion) mods.all_matches = 0;
   if (pattern && (argind < argc)) {
     if ((re = pcre_compile(pattern, mods.pcre_opts, &error, &erroroffset,
                            NULL))) {
-      if (!(mods.all_matches && mods.inversion)) {
-        for (int i = argind; i < argc; i++) {
-          FILE *file;
-          if ((file = fopen(argv[i], "r"))) {
-            find_matches_in_file(&mods, file, argv[i], re);
-            fclose(file);
-          } else {
-            out = 1;
-            if (!(mods.hide_warnings)) printf("No such file: %s\n", argv[i]);
-          }
+      for (int i = argind; i < argc; i++) {
+        FILE *file;
+        if ((file = fopen(argv[i], "r"))) {
+          find_matches_in_file(&mods, file, argv[i], re);
+          fclose(file);
+        } else {
+          out = 1;
+          if (!(mods.hide_warnings)) printf("No such file: %s\n", argv[i]);
         }
       }
     } else {
@@ -47,6 +46,7 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
     data.subject = data.line;
     data.subject_len = data.line_len;
     data.lines_counter++;
+    data.lineChanged = 1;
     int skip_line;
     do {
       int matched = find_match_in_line(re, &data);
@@ -83,8 +83,11 @@ int find_match_in_line(pcre *re, print_data *data) {
 
 void print_matches(match_modifiers *mods, print_data *data) {
   if (!(mods->only_matches_count) && !(mods->first_match)) {
-    if (!(mods->hide_filenames)) printf("%s:", data->filename);
-    if (mods->print_line_number) printf("%lu:", data->lines_counter);
+    if (data->lineChanged) {
+      if (!(mods->hide_filenames)) printf("%s:", data->filename);
+      if (mods->print_line_number) printf("%lu:", data->lines_counter);
+      data->lineChanged = 0;
+    }
     if (mods->all_matches) {
       for (int i = 0; i < data->rc; i++) {
         char *sub_start = data->subject + data->ovector[2 * i];

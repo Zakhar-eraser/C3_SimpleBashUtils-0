@@ -29,6 +29,7 @@ typedef struct print_data {
   int rc;
   int ovector[300];
   int repeat;
+  int lineChanged;
 } print_data;
 
 char *extend_pattern(char *old, char *add);

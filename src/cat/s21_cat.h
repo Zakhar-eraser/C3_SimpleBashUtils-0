@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define SHOW_UNPRINTABLES "v"
+
 #define NUMBER_NONBLANK "b"
 #define NUMBER_NONBLANK_GNU "-number-nonblank"
 

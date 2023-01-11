@@ -17,6 +17,6 @@ s21_cat_leaks: s21_cat_debug
 	./tests/s21_cat_leaks_test.sh
 
 clean:
-	rm s21_cat
+	-rm s21_cat
 
 rebuild: clean s21_cat

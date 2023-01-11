@@ -15,6 +15,13 @@ test_leaks '-n tests/text_with_blanks.txt'
 test_leaks '-s tests/text_with_blanks.txt'
 test_leaks '-t tests/unprintables.txt'
 
+test_leaks 'tests/some_text.txt tests/text_with_blanks.txt'
+test_leaks '-b tests/text_with_blanks.txt tests/some_text.txt'
+test_leaks '-e tests/unprintables.txt tests/text_with_blanks.txt'
+test_leaks '-n tests/text_with_blanks.txt tests/some_text.txt'
+test_leaks '-s tests/text_with_blanks.txt tests/some_text.txt'
+test_leaks '-t tests/unprintables.txt tests/text_with_blanks.txt'
+
 grep LEAK: tests/leaks_output.txt
 echo 'Press enter to remove tests/leaks_output.txt file'
 read

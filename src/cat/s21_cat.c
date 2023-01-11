@@ -2,9 +2,9 @@
 
 int main(int argc, char **argv) {
   int out = 1;
-  interpreter inter;
-  post_interpreter post_inter;
-  line_counter line_c;
+  interpreter inter = passthrough;
+  post_interpreter post_inter = post_passthrough;
+  line_counter line_c = no_counter;
   if (argc > 1) {
     int path_str_num;
     if (argv[1][0] == '-') {
@@ -13,9 +13,6 @@ int main(int argc, char **argv) {
               select_option(argv[1] + 1, &inter, &post_inter, &line_c));
     } else {
       path_str_num = 1;
-      inter = passthrough;
-      post_inter = post_passthrough;
-      line_c = no_counter;
       out = 0;
     }
     for (; (!out) && (path_str_num < argc); path_str_num++) {
@@ -37,7 +34,6 @@ char select_option(char *option, interpreter *inter,
   char out = 1;
   if (!strcmp(option, NUMBER_NONBLANK) ||
       !strcmp(option, NUMBER_NONBLANK_GNU)) {
-    *inter = passthrough;
     *post_inter = number;
     *line_c = non_blank_line_counter;
   } else if (!strcmp(option, SHOW_ENDS)) {
@@ -45,16 +41,13 @@ char select_option(char *option, interpreter *inter,
     *post_inter = mark_lines_end;
     *line_c = end_counter;
   } else if (!strcmp(option, SHOW_ENDS_GNU)) {
-    *inter = passthrough;
     *post_inter = mark_lines_end;
     *line_c = end_counter;
   } else if (!strcmp(option, NUMBER) || !strcmp(option, NUMBER_GNU)) {
-    *inter = passthrough;
     *post_inter = number;
     *line_c = any_line_counter;
   } else if (!strcmp(option, SQUEEZE_BLANK) ||
              !strcmp(option, SQUEEZE_BLANK_GNU)) {
-    *inter = passthrough;
     *post_inter = squeeze_blank;
     *line_c = non_blank_line_counter;
   } else if (!strcmp(option, SHOW_TABS)) {
@@ -62,9 +55,10 @@ char select_option(char *option, interpreter *inter,
     *post_inter = mark_tabs;
     *line_c = tabs_counter;
   } else if (!strcmp(option, SHOW_TABS_GNU)) {
-    *inter = passthrough;
     *post_inter = mark_tabs;
     *line_c = tabs_counter;
+  } else if (!strcmp(option, SHOW_UNPRINTABLES)) {
+    *inter = interpret_nonprint;
   } else {
     out = 0;
   }
@@ -130,7 +124,7 @@ void number(char *out, char changed, size_t *count) {
   if (changed) {
     char tmp[2];
     strcpy(tmp, out);
-    sprintf(out, "     %lu\t%s", *count, tmp);
+    sprintf(out, "%6lu\t%s", *count, tmp);
   }
 }
 

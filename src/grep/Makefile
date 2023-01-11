@@ -17,6 +17,6 @@ s21_grep_leaks: s21_grep_debug
 	./tests/s21_grep_leaks_test.sh
 
 clean:
-	rm s21_grep
+	-rm s21_grep
 
 rebuild: clean s21_grep
