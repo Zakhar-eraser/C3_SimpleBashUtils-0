@@ -4,6 +4,7 @@ int main(int argc, char **argv) {
   int out = 0, erroroffset, argind;
   const char *error;
   pcre *re = NULL;
+  pcre **res = NULL;
   match_modifiers mods = {.argc = argc, .argv = argv};
   char *pattern = get_pattern(&mods, &argind);
   if (mods.all_matches && mods.inversion) mods.all_matches = 0;
@@ -191,6 +192,10 @@ char *extend_pattern_from_file(char *old, char *filename) {
     old = NULL;
   }
   return old;
+}
+
+pcre **get_regexes(char *pattern, match_modifiers *mods) {
+  
 }
 
 size_t len(char *str) {

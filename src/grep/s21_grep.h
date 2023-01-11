@@ -35,6 +35,8 @@ typedef struct print_data {
 char *extend_pattern(char *old, char *add);
 char *extend_pattern_from_file(char *old, char *filename);
 
+pcre **get_regexes(char *pattern, match_modifiers *mods);
+
 char *get_pattern(match_modifiers *mods, int *argind);
 void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
                           pcre *re);
