@@ -5,7 +5,7 @@
             "label": "Build debug cat",
             "type": "shell",
             "options": {
-                "cwd": "${workspaceFolder}/src"
+                "cwd": "${workspaceFolder}/src/cat"
             },
             "command": "make",
             "group": "build",
@@ -15,7 +15,7 @@
             "label": "Build debug grep",
             "type": "shell",
             "options": {
-                "cwd": "${workspaceFolder}/src"
+                "cwd": "${workspaceFolder}/src/grep"
             },
             "command": "make",
             "group": "build",

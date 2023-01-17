@@ -5,6 +5,12 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef struct regexes {
+  pcre **res;
+  size_t ptrn_cnt;
+  char *pattern;
+} regexes;
+
 typedef struct match_modifiers {
   int argc;
   char **argv;
@@ -35,11 +41,12 @@ typedef struct print_data {
 char *extend_pattern(char *old, char *add);
 char *extend_pattern_from_file(char *old, char *filename);
 
-pcre **get_regexes(char *pattern, match_modifiers *mods);
+int get_regexes(regexes *regs, match_modifiers *mods);
+void free_regexes(regexes *regs);
 
 char *get_pattern(match_modifiers *mods, int *argind);
 void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
-                          pcre *re);
+                          regexes *regs);
 
 int find_match_in_line(pcre *re, print_data *data);
 

@@ -10,7 +10,7 @@
             "name": "Cat Debug",
             "program": "${workspaceFolder}/src/cat/s21_cat",
             "args": ["-s", "tests/empty.txt"],
-            "cwd": "${workspaceFolder}/src",
+            "cwd": "${workspaceFolder}/src/cat",
             "preLaunchTask": "Build debug cat"
         },
         {
@@ -18,8 +18,8 @@
             "request": "launch",
             "name": "Grep Debug",
             "program": "${workspaceFolder}/src/grep/s21_grep",
-            "args": ["-o", "the", "tests/other_text.txt", "tests/some_text.txt"],
-            "cwd": "${workspaceFolder}/src",
+            "args": ["-no", "-e", "Ipsum", "-e", "Lorem", "tests/some_text.txt"],
+            "cwd": "${workspaceFolder}/src/grep",
             "preLaunchTask": "Build debug grep"
         }
     ]
