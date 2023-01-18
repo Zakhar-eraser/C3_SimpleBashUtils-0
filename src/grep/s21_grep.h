@@ -25,10 +25,11 @@ typedef struct match_modifiers {
 } match_modifiers;
 
 typedef struct print_data {
-  char *subject;
+  //char *subject;
   char *line;
   char *filename;
-  ssize_t subject_len;
+  //ssize_t subject_len;
+  int offset;
   ssize_t line_len;
   size_t lines_counter;
   size_t matches_counter;

@@ -63,10 +63,8 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
   while ((data.line_len = getline(&(data.line), &line_cap, file)) > 0 &&
          !skip_file) {
     data.repeat = mods->all_matches;
-    //data.ovector[0] = 0;
-    //data.ovector[1] = 1;
-    data.subject = data.line;
-    data.subject_len = data.line_len;
+    data.ovector[0] = -1;
+    data.ovector[1] = 0;
     data.lines_counter++;
     data.lineChanged = 1;
     int skip_line;
@@ -80,8 +78,8 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
         print_matches(mods, &data);
       }
       if (!data.repeat && (ptrn_order < regs->ptrn_cnt - 1)) {
-        //data.ovector[0] = 0;
-        //data.ovector[1] = 1;
+        data.ovector[0] = -1;
+        data.ovector[1] = 0;
         data.repeat = 1;
         ptrn_order++;
       }
@@ -93,61 +91,32 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
   print_score(mods, &data);
 }
 
-//int find_match_in_line(pcre *re, print_data *data) {
-//  int out = 0, opts = 0;
-//  int *ovector = data->ovector;
-//  if (ovector[0] == ovector[1]) {
-//    if (ovector[0] == (int)(data->subject_len - 1)) {
-//      data->repeat = 0;
-//    } else {
-//      opts = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
-//    }
-//  }
-//  data->rc = pcre_exec(re, NULL, data->subject, data->subject_len, 0, opts,
-//                       ovector, 300);
-//  if (data->rc == PCRE_ERROR_NOMATCH) {
-//    if (opts == 0) {
-//      data->repeat = 0;
-//    } else {
-//      data->subject = data->subject[1];
-//      (data->subject_len)--;
-//    }
-//  }
-//  if (data->rc > 0) out = 1;
-//  return out;
-//}
-
 int find_match_in_line(pcre *re, print_data *data) {
   int out = 0;
   int *ovector = data->ovector;
-  data->rc = pcre_exec(re, NULL, data->subject, data->subject_len, 0,
-                       0, ovector, 300);
-  if (data->rc == PCRE_ERROR_NOMATCH) {
-    data->repeat = 0;
-  } else if (ovector[0] == ovector[1]) {
-    if (ovector[0] < data->subject_len) {
-      int rc = pcre_exec(re, NULL, data->subject, data->subject_len, 0,
-                       PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED, ovector + 2, 297);
-      if (rc > 0) {
-        data->rc += rc;
+  int options = 0;
+  if (ovector[0] == ovector[1]) {
+    if (data->offset == data->line_len) {
+      data->repeat = 0;
+    } else {
+      options = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
+    }
+  }
+  if (data->repeat) {
+    data->rc = pcre_exec(re, NULL, data->line, data->line_len,
+                         data->offset, options, ovector, 300);
+    if (data->rc == PCRE_ERROR_NOMATCH) {
+      if (options) {
+        data->offset += 1;
       } else {
-        ovector[0] += 1;
-        ovector[1] += 1;
-        data->subject += 1;
-        data->subject_len -= 1;
+        data->repeat = 0;
       }
     }
-    //if (ovector[0] == (int)(data->subject_len - 1)) {
-    //  data->repeat = 0;
-    //  out = find_empties;
-    //} else {
-    //  rc = pcre_exec(re, NULL, data->subject, data->subject_len, 0,
-    //                 PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED,
-    //                 ovector + 2, 297);
-    //  if (rc = )
-    //}
+    if (data->rc > 0) {
+      out = 1;
+      data->offset = ovector[1];
+    }
   }
-  if (rc > 0) out = 1;
   return out;
 }
 
@@ -160,13 +129,10 @@ void print_matches(match_modifiers *mods, print_data *data) {
     }
     if (mods->all_matches) {
       for (int i = 0; i < data->rc; i++) {
-        char *sub_start = data->subject + data->ovector[2 * i];
+        char *sub_start = data->line + data->ovector[2 * i];
         int sub_len = data->ovector[2 * i + 1] - data->ovector[2 * i];
         if (sub_len) printf("%.*s\n", sub_len, sub_start);
       }
-      int skip = data->ovector[data->rc * 3 - 2];
-      data->subject += skip;
-      data->subject_len -= skip;
     } else {
       printf("%s", data->line);
       if (data->line[data->line_len - 1] != '\n') printf("\n");

@@ -8,7 +8,7 @@ test() {
 }
 
 echo 'TESTING s21_grep'
-#test '-o the tests/some_text.txt'
+test '-o the tests/some_text.txt'
 #test 'a tests/some_text.txt'
 #test 'not_1_1_exits tests/some_text.txt'
 #test 'a tests/some_text.txt tests/other_text.txt'
