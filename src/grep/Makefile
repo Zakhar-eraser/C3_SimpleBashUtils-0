@@ -16,6 +16,9 @@ s21_grep_debug:
 s21_grep_leaks: s21_grep_debug
 	./tests/s21_grep_leaks_test.sh
 
+s21_grep_valgrind: s21_grep_debug
+	./tests/s21_grep_valgrind_test.sh
+
 clean:
 	-rm s21_grep
 

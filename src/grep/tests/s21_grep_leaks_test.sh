@@ -1,9 +1,16 @@
 #!/bin/bash
 
 test_leaks() {
-    echo "START TEST with args: $1"
+    echo "START LEAKS TEST with args: $1"
     echo $1 >> tests/leaks_output.txt
     leaks -atExit -- ./s21_grep $1 >> tests/leaks_output.txt
+}
+
+test_valgrind() {
+    echo "START VALGRIND TEST with args: $1"
+    valgrind --leak-check=full --log-file=tests/valgrind.log ./s21_grep $1
+    egrep -e 'ERROR SUMMARY: [^0]|are definitely|uninitialised|Unhandled exception|\
+        Invalid read|Invalid write|Invalid free|Source and desti|Mismatched free|unaddressable byte|vex x86'
 }
 
 echo 'TESTING s21_grep FOR LEAKS'

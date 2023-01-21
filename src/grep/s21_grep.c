@@ -3,9 +3,11 @@
 int main(int argc, char **argv) {
   int out = 0, argind;
   regexes regs = {.pattern = NULL, .ptrn_cnt = 0, .res = NULL};
-  match_modifiers mods = {.argc = argc, .argv = argv};
+  match_modifiers mods = {.argc = argc, .argv = argv,
+                          .all_matches = 0, .first_match = 0, .hide_filenames = 0,
+                          .hide_warnings = 0, .inversion = 0, .only_matches_count = 0,
+                          .pcre_opts = 0, .print_line_number = 0};
   regs.pattern = get_pattern(&mods, &argind);
-  if (mods.all_matches && mods.inversion) mods.all_matches = 0;
   if (regs.pattern && (argind < argc)) {
     if (get_regexes(&regs, &mods)) {
       for (int i = argind; i < argc; i++) {
@@ -27,6 +29,7 @@ int main(int argc, char **argv) {
   }
   free_regexes(&regs);
   free(regs.pattern);
+  regs.pattern = NULL;
   return out;
 }
 
@@ -57,22 +60,25 @@ int get_regexes(regexes *regs, match_modifiers *mods) {
 
 void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
                           regexes *regs) {
-  print_data data = {.filename = filename, .line = NULL};
+  print_data data = {.filename = filename, .line = NULL,
+                     .lines_counter = 0, .matches_counter = 0,
+                     .line_len = 0};
   size_t line_cap = 0;
   int skip_file = 0;
-  while ((data.line_len = getline(&(data.line), &line_cap, file)) > 0 &&
+  while (((data.line_len = getline(&(data.line), &line_cap, file)) > 0) &&
          !skip_file) {
-    data.repeat = mods->all_matches;
+    data.repeat = 1;
     data.ovector[0] = -1;
     data.ovector[1] = 0;
+    data.offset = 0;
     data.lines_counter++;
     data.lineChanged = 1;
-    int skip_line;
+    int skip_line = 0;
     size_t ptrn_order = 0;
     do {
       int matched = find_match_in_line(*(regs->res + ptrn_order), &data);
       skip_file = matched && mods->first_match;
-      skip_line = matched && mods->only_matches_count;
+      skip_line = matched && (!(mods->all_matches) || mods->only_matches_count);
       if ((matched && !(mods->inversion)) || (!matched && mods->inversion)) {
         data.matches_counter++;
         print_matches(mods, &data);
@@ -84,10 +90,9 @@ void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
         ptrn_order++;
       }
     } while (data.repeat && !skip_file && !skip_line);
-    free(data.line);
-    data.line = NULL;
   }
   free(data.line);
+  data.line = NULL;
   print_score(mods, &data);
 }
 
@@ -188,6 +193,7 @@ char *get_pattern(match_modifiers *mods, int *argind) {
     (*argind)++;
   }
   if (mods->argc - *argind == 1) mods->hide_filenames = 1;
+  if (mods->all_matches && mods->inversion) mods->all_matches = 0;
   return pattern;
 }
 
@@ -198,7 +204,8 @@ char *extend_pattern(char *old, char *add) {
     pref_len++;
     add_sign[0] = '|';
   }
-  char *tmp = (char *)realloc(old, sizeof(char) * (pref_len + len(add)));
+  char *tmp = (char *)realloc(old, sizeof(char) * (pref_len + 1 + len(add)));
+  tmp[0] = 0;
   if (tmp) {
     strcat(tmp, add_sign);
     strcat(tmp, add);
@@ -216,8 +223,6 @@ char *extend_pattern_from_file(char *old, char *filename) {
     while ((line_len = getline(&line, &line_cap, file)) > 0) {
       if (line[line_len - 1] == '\n') line[line_len - 1] = '\0';
       old = extend_pattern(old, line);
-      free(line);
-      line = NULL;
     }
     free(line);
     fclose(file);
@@ -240,4 +245,5 @@ void free_regexes(regexes *regs) {
     pcre_free(*re);
   }
   free(regs->res);
+  regs->res = NULL;
 }
