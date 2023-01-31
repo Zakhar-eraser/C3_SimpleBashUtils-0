@@ -5,15 +5,22 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef struct input_data {
+  int argc;
+  char **argv;
+  char **filenames;
+  size_t files_count;
+} input_data;
+
 typedef struct regexes {
+  const char *error;
+  int erroroffset;
   pcre **res;
   size_t ptrn_cnt;
   char *pattern;
 } regexes;
 
 typedef struct match_modifiers {
-  int argc;
-  char **argv;
   int pcre_opts;
   int inversion;
   int only_matches_count;
@@ -43,15 +50,17 @@ char *extend_pattern_from_file(char *old, char *filename);
 int get_regexes(regexes *regs, match_modifiers *mods);
 void free_regexes(regexes *regs);
 
-char *get_pattern(match_modifiers *mods, int *argind);
-void find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
+int get_pattern(match_modifiers *mods, regexes *regs, input_data *input);
+int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
                           regexes *regs);
 
 int find_match_in_line(pcre *re, print_data *data);
 
-size_t len(char *str);
-
 void print_matches(match_modifiers *mods, print_data *data);
 void print_score(match_modifiers *mods, print_data *data);
+
+char *remove_first(input_data *input);
+
+void add_filename(input_data *input, char *filename);
 
 #endif  // _SRC_GREP_S21_GREP_H_

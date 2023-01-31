@@ -10,7 +10,7 @@ test() {
 echo 'TESTING s21_grep'
 
 
-test "-no -e [the] tests/other_text.txt"
+#test "-no -e [the] tests/other_text.txt"
 
 #test '-o the tests/some_text.txt'
 #test 'a tests/some_text.txt'
@@ -51,7 +51,7 @@ test "-no -e [the] tests/other_text.txt"
 #test '-ol the tests/other_text.txt tests/some_text.txt'
 #test '-oc the tests/other_text.txt tests/some_text.txt'
 #test '-oh the tests/other_text.txt tests/some_text.txt'
-#test '-os -e the -f tests/regex.txt tests/nit.txt tests/some_text.txt'
+test '-os -e the -f tests/regex.txt tests/nit.txt -n tests/some_text.txt'
 #test '-iv the tests/other_text.txt tests/some_text.txt'
 #test '-ic the tests/other_text.txt tests/some_text.txt'
 #test '-il the tests/other_text.txt tests/some_text.txt'
