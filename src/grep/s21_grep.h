@@ -34,14 +34,13 @@ typedef struct match_modifiers {
 typedef struct print_data {
   char *line;
   char *filename;
-  int offset;
   ssize_t line_len;
   size_t lines_counter;
   size_t matches_counter;
   int rc;
   int ovector[300];
-  int repeat;
-  int lineChanged;
+  int end;
+  int line_changed;
 } print_data;
 
 char *extend_pattern(char *old, char *add);
@@ -54,9 +53,12 @@ int get_pattern(match_modifiers *mods, regexes *regs, input_data *input);
 int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
                           regexes *regs);
 
-int find_match_in_line(pcre *re, print_data *data);
+int re_find_match(match_modifiers *mods, print_data *data, regexes *regs,
+                  int offset, ssize_t sub_len, size_t re_order);
 
 void print_matches(match_modifiers *mods, print_data *data);
+void print_prefix(match_modifiers *mods, print_data *data);
+void print_match(match_modifiers *mods, print_data *data);
 void print_score(match_modifiers *mods, print_data *data);
 
 char *remove_first(input_data *input);

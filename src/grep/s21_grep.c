@@ -52,7 +52,7 @@ int get_regexes(regexes *regs, match_modifiers *mods) {
       regs->res = tmp;
       regs->ptrn_cnt++;
     }
-    regs->res[regs->ptrn_cnt - 1] = pcre_compile(regs->pattern, mods->pcre_opts, &(regs->error), &(regs->erroroffset), NULL);
+    regs->res[regs->ptrn_cnt - 1] = pcre_compile(reg, mods->pcre_opts, &(regs->error), &(regs->erroroffset), NULL);
     if (regs->res[regs->ptrn_cnt - 1]) {
       reg = strtok(NULL, delim);
     } else {
@@ -71,30 +71,19 @@ int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
   int skip_file = 0, out = 0;
   while (((data.line_len = getline(&(data.line), &line_cap, file)) > 0) &&
          !skip_file) {
-    data.repeat = 1;
-    data.ovector[0] = -1;
-    data.ovector[1] = 0;
-    data.offset = 0;
     data.lines_counter++;
-    data.lineChanged = 1;
-    int skip_line = 0;
-    size_t ptrn_order = 0;
-    do {
-      int matched = find_match_in_line(*(regs->res + ptrn_order), &data);
-      out |= matched;
-      skip_file = matched && mods->first_match;
-      skip_line = matched && (!(mods->all_matches) || mods->only_matches_count);
-      if ((matched && !(mods->inversion)) || (!matched && mods->inversion)) {
-        data.matches_counter++;
-        print_matches(mods, &data);
+    data.line_changed = 1;
+    if (!mods->all_matches) {
+      int rc = pcre_exec(regs->res[0], NULL, data.line,
+                           data.line_len, 0, 0, data.ovector, 300);
+      if (rc > 0) {
+        print_match(mods, &data);
+        if (mods->first_match) skip_file = 1;
+        out = 1;
       }
-      if (!data.repeat && (ptrn_order < regs->ptrn_cnt - 1)) {
-        data.ovector[0] = -1;
-        data.ovector[1] = 0;
-        data.repeat = 1;
-        ptrn_order++;
-      }
-    } while (data.repeat && !skip_file && !skip_line);
+    } else {
+      out = re_find_match(mods, &data, regs, 0, data.line_len, 0);
+    }
   }
   free(data.line);
   data.line = NULL;
@@ -102,52 +91,49 @@ int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
   return out;
 }
 
-int find_match_in_line(pcre *re, print_data *data) {
+int re_find_match(match_modifiers *mods, print_data *data, regexes *regs,
+                  int offset, ssize_t sub_len, size_t re_order) {
   int out = 0;
-  int *ovector = data->ovector;
-  int options = 0;
-  if (ovector[0] == ovector[1]) {
-    if (data->offset == data->line_len) {
-      data->repeat = 0;
-    } else {
-      options = PCRE_NOTEMPTY_ATSTART | PCRE_ANCHORED;
-    }
-  }
-  if (data->repeat) {
-    data->rc = pcre_exec(re, NULL, data->line, data->line_len,
-                         data->offset, options, ovector, 300);
-    if (data->rc == PCRE_ERROR_NOMATCH) {
-      if (options) {
-        data->offset += 1;
-      } else {
-        data->repeat = 0;
-      }
-    }
-    if (data->rc > 0) {
-      out = 1;
-      data->offset = ovector[1];
-    }
+  data->ovector[0] = data->ovector[1] = 0;
+  data->rc = pcre_exec(regs->res[re_order], NULL, data->line,
+                     sub_len, offset, 0, data->ovector, 300);
+  if (data->rc > 0) {
+    data->end = data->ovector[1];
+    out = 1;
+    print_matches(mods, data);
+    if (re_order + 1 < regs->ptrn_cnt)
+      re_find_match(mods, data, regs, data->ovector[0],
+        data->end, re_order + 1);
+    if ((data->end < data->line_len) && !re_order)
+      re_find_match(mods, data, regs, data->end, data->line_len, 0);
   }
   return out;
 }
 
 void print_matches(match_modifiers *mods, print_data *data) {
   if (!(mods->only_matches_count) && !(mods->first_match)) {
-    if (data->lineChanged) {
-      if (!(mods->hide_filenames)) printf("%s:", data->filename);
-      if (mods->print_line_number) printf("%lu:", data->lines_counter);
-      data->lineChanged = 0;
+    print_prefix(mods, data);
+    for (int i = 0; i < data->rc; i++) {
+      char *sub_start = data->line + data->ovector[2 * i];
+      int sub_len = data->ovector[2 * i + 1] - data->ovector[2 * i];
+      if (sub_len) printf("%.*s\n", sub_len, sub_start);
     }
-    if (mods->all_matches) {
-      for (int i = 0; i < data->rc; i++) {
-        char *sub_start = data->line + data->ovector[2 * i];
-        int sub_len = data->ovector[2 * i + 1] - data->ovector[2 * i];
-        if (sub_len) printf("%.*s\n", sub_len, sub_start);
-      }
-    } else {
-      printf("%s", data->line);
-      if (data->line[data->line_len - 1] != '\n') printf("\n");
-    }
+  }
+}
+
+void print_match(match_modifiers *mods, print_data *data) {
+  if (!(mods->only_matches_count) && !(mods->first_match)) {
+    print_prefix(mods, data);
+    printf("%s", data->line);
+    if (data->line[data->line_len - 1] != '\n') printf("\n");
+  }
+}
+
+void print_prefix(match_modifiers *mods, print_data *data) {
+  if (data->line_changed) {
+    if (!(mods->hide_filenames)) printf("%s:", data->filename);
+    if (mods->print_line_number) printf("%lu:", data->lines_counter);
+    data->line_changed = 0;
   }
 }
 
