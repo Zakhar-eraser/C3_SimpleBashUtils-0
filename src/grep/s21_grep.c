@@ -73,17 +73,19 @@ int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
          !skip_file) {
     data.lines_counter++;
     data.line_changed = 1;
+    int matched = 0;
     if (!mods->all_matches) {
       int rc = pcre_exec(regs->res[0], NULL, data.line,
                            data.line_len, 0, 0, data.ovector, 300);
-      if (rc > 0) {
+      if ((rc > 0 && !(mods->inversion)) || (rc <= 0 && mods->inversion)) {
         print_match(mods, &data);
         if (mods->first_match) skip_file = 1;
-        out = 1;
+        matched = out = 1;
       }
     } else {
-      out = re_find_match(mods, &data, regs, 0, data.line_len, 0);
+      matched = out = re_find_match(mods, &data, regs, 0, data.line_len, 0);
     }
+    if (matched) data.matches_counter += 1;
   }
   free(data.line);
   data.line = NULL;
@@ -104,8 +106,11 @@ int re_find_match(match_modifiers *mods, print_data *data, regexes *regs,
     if (re_order + 1 < regs->ptrn_cnt)
       re_find_match(mods, data, regs, data->ovector[0],
         data->end, re_order + 1);
-    if ((data->end < data->line_len) && !re_order)
+    if (data->end < data->line_len)
       re_find_match(mods, data, regs, data->end, data->line_len, 0);
+  } else {
+    if (re_order + 1 < regs->ptrn_cnt)
+      out = re_find_match(mods, data, regs, offset, sub_len, re_order + 1);
   }
   return out;
 }
@@ -138,13 +143,12 @@ void print_prefix(match_modifiers *mods, print_data *data) {
 }
 
 void print_score(match_modifiers *mods, print_data *data) {
+  if (mods->only_matches_count) {
+    if (!(mods->hide_filenames)) printf("%s:", data->filename);
+    printf("%lu\n", data->matches_counter);
+  }
   if (mods->first_match && data->matches_counter) {
     printf("%s\n", data->filename);
-  } else {
-    if (mods->only_matches_count) {
-      if (!(mods->hide_filenames)) printf("%s:", data->filename);
-      printf("%lu\n", data->matches_counter);
-    }
   }
 }
 

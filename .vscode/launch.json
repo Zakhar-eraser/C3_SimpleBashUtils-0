@@ -18,7 +18,7 @@
             "request": "launch",
             "name": "Grep Debug",
             "program": "${workspaceFolder}/src/grep/s21_grep",
-            "args": ["the", "tests/some_text.txt"],
+            "args": ["the", "-v", "tests/some_text.txt"],
             "cwd": "${workspaceFolder}/src/grep",
             "preLaunchTask": "Build debug grep"
         }
