@@ -153,9 +153,9 @@ void print_score(match_modifiers *mods, print_data *data) {
 }
 
 int get_pattern(match_modifiers *mods, regexes *regs, input_data *input) {
-  int out = 0;
+  int out = 0, ind = 1;
   char *options = "e:ivclnhsf:o";
-  while ((optind < input->argc) && !out) {
+  while ((ind < input->argc) && !out) {
     int opt = getopt(input->argc, input->argv, options);
     if (opt == 'e') {
       regs->pattern = extend_pattern(regs->pattern, optarg);
@@ -178,8 +178,8 @@ int get_pattern(match_modifiers *mods, regexes *regs, input_data *input) {
     } else if (opt == 'o') {
       mods->all_matches = 1;
     } else if (opt == -1) {
-      add_filename(input, input->argv[optind]);
-      optind++;
+      add_filename(input, input->argv[ind]);
+      ind++;
     } else {
       out = 1;
     }
