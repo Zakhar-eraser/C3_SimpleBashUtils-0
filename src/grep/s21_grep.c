@@ -20,15 +20,18 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < input.files_count; i++) {
           FILE *file;
           if ((file = fopen(input.filenames[i], "r"))) {
-            out |= !find_matches_in_file(&mods, file, input.filenames[i], &regs);
+            out |=
+                !find_matches_in_file(&mods, file, input.filenames[i], &regs);
             fclose(file);
           } else {
             out = 1;
-            if (!(mods.hide_warnings)) printf("No such file: %s\n", input.filenames[i]);
+            if (!(mods.hide_warnings))
+              printf("No such file: %s\n", input.filenames[i]);
           }
         }
       } else {
-        printf("Pattern compilation error at %d: %s\n", regs.erroroffset, regs.error);
+        printf("Pattern compilation error at %d: %s\n", regs.erroroffset,
+               regs.error);
         out = 4;
       }
       break;
@@ -47,12 +50,14 @@ int get_regexes(regexes *regs, match_modifiers *mods) {
   char *reg = strtok(regs->pattern, delim);
   regs->ptrn_cnt = 0;
   do {
-    pcre **tmp = (pcre **)realloc(regs->res, sizeof(pcre *) * (regs->ptrn_cnt + 1));
+    pcre **tmp =
+        (pcre **)realloc(regs->res, sizeof(pcre *) * (regs->ptrn_cnt + 1));
     if (tmp) {
       regs->res = tmp;
       regs->ptrn_cnt++;
     }
-    regs->res[regs->ptrn_cnt - 1] = pcre_compile(reg, mods->pcre_opts, &(regs->error), &(regs->erroroffset), NULL);
+    regs->res[regs->ptrn_cnt - 1] = pcre_compile(
+        reg, mods->pcre_opts, &(regs->error), &(regs->erroroffset), NULL);
     if (regs->res[regs->ptrn_cnt - 1]) {
       reg = strtok(NULL, delim);
     } else {
@@ -63,9 +68,11 @@ int get_regexes(regexes *regs, match_modifiers *mods) {
 }
 
 int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
-                          regexes *regs) {
-  print_data data = {.filename = filename, .line = NULL,
-                     .lines_counter = 0, .matches_counter = 0,
+                         regexes *regs) {
+  print_data data = {.filename = filename,
+                     .line = NULL,
+                     .lines_counter = 0,
+                     .matches_counter = 0,
                      .line_len = 0};
   size_t line_cap = 0;
   int skip_file = 0, out = 0;
@@ -75,8 +82,8 @@ int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
     data.line_changed = 1;
     int matched = 0;
     if (!mods->all_matches) {
-      int rc = pcre_exec(regs->res[0], NULL, data.line,
-                           data.line_len, 0, 0, data.ovector, 300);
+      int rc = pcre_exec(regs->res[0], NULL, data.line, data.line_len, 0, 0,
+                         data.ovector, 300);
       if ((rc > 0 && !(mods->inversion)) || (rc <= 0 && mods->inversion)) {
         print_match(mods, &data);
         if (mods->first_match) skip_file = 1;
@@ -97,15 +104,15 @@ int re_find_match(match_modifiers *mods, print_data *data, regexes *regs,
                   int offset, ssize_t sub_len, size_t re_order) {
   int out = 0;
   data->ovector[0] = data->ovector[1] = 0;
-  data->rc = pcre_exec(regs->res[re_order], NULL, data->line,
-                     sub_len, offset, 0, data->ovector, 300);
+  data->rc = pcre_exec(regs->res[re_order], NULL, data->line, sub_len, offset,
+                       0, data->ovector, 300);
   if (data->rc > 0) {
     data->end = data->ovector[1];
     out = 1;
     print_matches(mods, data);
     if (re_order + 1 < regs->ptrn_cnt)
-      re_find_match(mods, data, regs, data->ovector[0],
-        data->end, re_order + 1);
+      re_find_match(mods, data, regs, data->ovector[0], data->end,
+                    re_order + 1);
     if (data->end < data->line_len)
       re_find_match(mods, data, regs, data->end, data->line_len, 0);
   } else {
@@ -153,9 +160,9 @@ void print_score(match_modifiers *mods, print_data *data) {
 }
 
 int get_pattern(match_modifiers *mods, regexes *regs, input_data *input) {
-  int out = 0, ind = 1;
+  int out = 0;
   char *options = "e:ivclnhsf:o";
-  while ((ind < input->argc) && !out) {
+  while ((optind < input->argc) && !out) {
     int opt = getopt(input->argc, input->argv, options);
     if (opt == 'e') {
       regs->pattern = extend_pattern(regs->pattern, optarg);
@@ -174,12 +181,14 @@ int get_pattern(match_modifiers *mods, regexes *regs, input_data *input) {
     } else if (opt == 's') {
       mods->hide_warnings = 1;
     } else if (opt == 'f') {
-      if (!(regs->pattern = extend_pattern_from_file(regs->pattern, optarg))) out = 2;
+      if (!(regs->pattern = extend_pattern_from_file(regs->pattern, optarg)))
+        out = 2;
     } else if (opt == 'o') {
       mods->all_matches = 1;
     } else if (opt == -1) {
-      add_filename(input, input->argv[ind]);
-      ind++;
+      add_filename(input, (input->argv)[optind]);
+      input->argc--;
+      input->argv++;
     } else {
       out = 1;
     }
@@ -199,7 +208,8 @@ int get_pattern(match_modifiers *mods, regexes *regs, input_data *input) {
 
 char *extend_pattern(char *old, char *add) {
   if (old) {
-    char *tmp = (char *)realloc(old, sizeof(char) * (strlen(old) + strlen(add) + 2));
+    char *tmp =
+        (char *)realloc(old, sizeof(char) * (strlen(old) + strlen(add) + 2));
     if (tmp) {
       strcat(tmp, "|");
       strcat(tmp, add);
@@ -232,7 +242,8 @@ char *extend_pattern_from_file(char *old, char *filename) {
 }
 
 void add_filename(input_data *input, char *filename) {
-  char **tmp = (char **)realloc(input->filenames, sizeof(char *) * (input->files_count + 1));
+  char **tmp = (char **)realloc(input->filenames,
+                                sizeof(char *) * (input->files_count + 1));
   if (tmp) {
     tmp[input->files_count] = filename;
     input->files_count += 1;
@@ -249,7 +260,8 @@ char *remove_first(input_data *input) {
     for (char **i = filenames; i < filenames + count - 1; i++) {
       *i = *(i + 1);
     }
-    char **tmp = (char **)realloc(input->filenames, sizeof(char *) * (input->files_count - 1));
+    char **tmp = (char **)realloc(input->filenames,
+                                  sizeof(char *) * (input->files_count - 1));
     count--;
     if (tmp) {
       input->filenames = tmp;

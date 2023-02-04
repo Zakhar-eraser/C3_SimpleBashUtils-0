@@ -51,7 +51,7 @@ void free_regexes(regexes *regs);
 
 int get_pattern(match_modifiers *mods, regexes *regs, input_data *input);
 int find_matches_in_file(match_modifiers *mods, FILE *file, char *filename,
-                          regexes *regs);
+                         regexes *regs);
 
 int re_find_match(match_modifiers *mods, print_data *data, regexes *regs,
                   int offset, ssize_t sub_len, size_t re_order);
