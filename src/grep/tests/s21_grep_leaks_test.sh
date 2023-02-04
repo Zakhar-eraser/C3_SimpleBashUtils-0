@@ -1,9 +1,12 @@
 #!/bin/bash
 
+OK=0
+
 test_leaks() {
     echo "START LEAKS TEST with args: $1"
     echo $1 >> tests/leaks_output.txt
-    leaks -atExit -- ./s21_grep $1 >> tests/leaks_output.txt
+    leaks -atExit -- ./s21_grep $1 > tests/leaks_output.txt
+    grep LEAK: tests/leaks_output.txt
     if [[ $? -eq 0 ]]; then
         OK=1
     fi    
@@ -69,8 +72,4 @@ test_leaks '-cn the tests/other_text.txt tests/some_text.txt'
 test_leaks '-ch the tests/other_text.txt tests/some_text.txt'
 test_leaks '-lh the tests/other_text.txt tests/some_text.txt'
 
-grep LEAK: tests/leaks_output.txt
-echo 'Press enter to remove tests/leaks_output.txt file'
-read
-rm tests/leaks_output.txt
 exit $OK

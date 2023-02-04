@@ -1,11 +1,13 @@
 #!/bin/bash
 
+OK=0
+
 test() {
     echo "START TEST with args: $1"
     grep $1 > tests/1.txt
     ./s21_grep $1 > tests/2.txt
     diff tests/1.txt tests/2.txt && echo SUCCESS
-    if [[ $? -eq 0 ]]; then
+    if [[ $? -eq 1 ]]; then
         OK=1
     fi
 }
